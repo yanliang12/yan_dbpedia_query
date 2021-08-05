@@ -2,7 +2,7 @@
 import jessica_es
 
 es_session = jessica_es.start_es(
-	es_path = "/Downloads/elasticsearch_dbpedia",
+	es_path = "/yan/elasticsearch_dbpedia",
 	es_port_number = "9267")
 
 '''
