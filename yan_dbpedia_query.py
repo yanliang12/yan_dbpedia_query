@@ -26,9 +26,9 @@ def find_entity_id_and_type(
 			e_as_object = list(filter(lambda t: t['object_wikipage_id'] == e, triplets))
 			if len(e_as_object) > 0:
 				entity = {'entity_wikipage_id':e}
-				entity['entity_id'] = e_as_subject[0]['object']
-				entity['entity_name'] = e_as_subject[0]['object_name']
-				entity['entity_type'] = e_as_subject[0]['object_type']
+				entity['entity_id'] = e_as_object[0]['object']
+				entity['entity_name'] = e_as_object[0]['object_name']
+				entity['entity_type'] = e_as_object[0]['object_type']
 		output.append(entity)
 	return output
 
