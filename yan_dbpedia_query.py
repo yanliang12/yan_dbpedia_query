@@ -32,22 +32,6 @@ def find_entity_id_and_type(
 		output.append(entity)
 	return output
 
-t = jessica_es.search_doc_by_filter(
-	index_name = 'dbpedia_triplet',
-	field_name = 'subject_wikipage_id',
-	entity_name = w,
-	es_session = es_session,
-	return_entity_max_number = 1)
-if len(t) > 0:
-	print(t)
-
-
-e_as_subject = list(filter(lambda t: t['subject_wikipage_id'] == e, triplets))
-
-
-
-
-
 def find_triplets_of_entities(
 	query_wikipage_ids,
 	skip_rdf_schema_relation = True,
