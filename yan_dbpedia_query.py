@@ -9,6 +9,45 @@ es_session = jessica_es.start_es(
 172.30.96.1:9267/dbpedia_triplet/_search?pretty=true
 '''
 
+def find_entity_id_and_type(
+	query_wikipage_ids,
+	triplets,
+	):
+	output = []
+	for e in query_wikipage_ids:
+		entity = None
+		e_as_subject = list(filter(lambda t: t['subject_wikipage_id'] == e, triplets))
+		if len(e_as_subject) > 0:
+			entity = {'entity_wikipage_id':e}
+			entity['entity_id'] = e_as_subject[0]['subject']
+			entity['entity_name'] = e_as_subject[0]['subject_name']
+			entity['entity_type'] = e_as_subject[0]['subject_type']
+		else:
+			e_as_object = list(filter(lambda t: t['object_wikipage_id'] == e, triplets))
+			if len(e_as_object) > 0:
+				entity = {'entity_wikipage_id':e}
+				entity['entity_id'] = e_as_subject[0]['object']
+				entity['entity_name'] = e_as_subject[0]['object_name']
+				entity['entity_type'] = e_as_subject[0]['object_type']
+		output.append(entity)
+	return output
+
+t = jessica_es.search_doc_by_filter(
+	index_name = 'dbpedia_triplet',
+	field_name = 'subject_wikipage_id',
+	entity_name = w,
+	es_session = es_session,
+	return_entity_max_number = 1)
+if len(t) > 0:
+	print(t)
+
+
+e_as_subject = list(filter(lambda t: t['subject_wikipage_id'] == e, triplets))
+
+
+
+
+
 def find_triplets_of_entities(
 	query_wikipage_ids,
 	skip_rdf_schema_relation = True,
@@ -34,7 +73,8 @@ def find_triplets_of_entities(
 		except:
 			pass
 	triplets = [dict(t) for t in {tuple(d.items()) for d in triplets}]
-	triplets = list(filter(lambda t: 'rdf-schema#' not in t['relation'], triplets))
+	if skip_rdf_schema_relation is True:
+		triplets = list(filter(lambda t: 'rdf-schema#' not in t['relation'], triplets))
 	return triplets
 
 def find_top_subject_object_for_each_entity(
@@ -46,7 +86,7 @@ def find_top_subject_object_for_each_entity(
 	for e in query_wikipage_ids:
 		try:
 			##
-			e_as_subject = list(filter(lambda t: t['subject_wikipage_id'] == e and t['relation'] not in ['rdf-schema#seeAlso'], triplets))
+			e_as_subject = list(filter(lambda t: t['subject_wikipage_id'] == e, triplets))
 			e_as_subject.sort(key=lambda t: t['object_out_degree'], reverse = True)
 			e_as_subject = e_as_subject[0:top_triplet_number]
 			output += e_as_subject
@@ -54,7 +94,7 @@ def find_top_subject_object_for_each_entity(
 			pass
 		try:
 			##
-			e_as_object = list(filter(lambda t: t['object_wikipage_id'] == e and t['relation'] not in ['rdf-schema#seeAlso'], triplets))
+			e_as_object = list(filter(lambda t: t['object_wikipage_id'] == e, triplets))
 			e_as_object.sort(key=lambda t: t['subject_out_degree'], reverse = True)
 			e_as_object = e_as_object[0:top_triplet_number]
 			output += e_as_object
@@ -76,7 +116,6 @@ def find_top_relations_between_entity_pairs(
 				try:
 					relation_triplet = list(filter(lambda t: 
 						t['subject_wikipage_id'] == subject_wikipage_id 
-						and t['relation'] not in ['rdf-schema#seeAlso']
 						and t['object_wikipage_id'] == object_wikipage_id, triplets))
 					output += relation_triplet
 				except:
@@ -95,16 +134,14 @@ def find_top_common_subject_object_of_entity_pairs(
 			if e1 < e2:
 				###########
 				e1_as_subject = list(filter(lambda t: 
-					t['subject_wikipage_id'] == e1 
-					and t['relation'] not in ['rdf-schema#seeAlso'], triplets))
+					t['subject_wikipage_id'] == e1, triplets))
 				e1_object = [
 					{'object':t['object'],
 					'object_out_degree':t['object_out_degree'],
 					} for t in e1_as_subject]
 				##
 				e2_as_subject = list(filter(lambda t: 
-					t['subject_wikipage_id'] == e2
-					and t['relation'] not in ['rdf-schema#seeAlso'], triplets))
+					t['subject_wikipage_id'] == e2, triplets))
 				e2_object = [
 					{'object':t['object'],
 					'object_out_degree':t['object_out_degree'],
@@ -124,16 +161,14 @@ def find_top_common_subject_object_of_entity_pairs(
 				output += e2_as_subject
 				###########
 				e1_as_object = list(filter(lambda t: 
-					t['object_wikipage_id'] == e1 
-					and t['relation'] not in ['rdf-schema#seeAlso'], triplets))
+					t['object_wikipage_id'] == e1, triplets))
 				e1_subject = [
 					{'subject':t['subject'],
 					'subject_out_degree':t['subject_out_degree'],
 					} for t in e1_as_object]
 				##
 				e2_as_object = list(filter(lambda t: 
-					t['object_wikipage_id'] == e2
-					and t['relation'] not in ['rdf-schema#seeAlso'], triplets))
+					t['object_wikipage_id'] == e2, triplets))
 				e2_subject = [
 					{'subject':t['subject'],
 					'subject_out_degree':t['subject_out_degree'],
